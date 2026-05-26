@@ -1,0 +1,39 @@
+# Secrets — NEVER commit
+config.py
+.env
+
+# Runtime state (generated at runtime, not source)
+trade_log.json
+*.db
+*.db.*
+*.pkl
+*_cache.json
+daily_candidates.json
+pnl_history.json
+politician_seen_filings.json
+politician_trades_cache.json
+scan_state.json
+scan_results_cache.json
+alerts.json
+
+# Generated reports and logs
+reports/
+logs/
+*.log
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE / OS noise
+.vscode/
+.idea/
+*.DS_Store
+Thumbs.db

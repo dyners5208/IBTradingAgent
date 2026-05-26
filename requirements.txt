@@ -1,0 +1,10 @@
+ib_insync>=0.9.86
+yfinance>=0.2.40
+pandas>=2.0.0
+numpy>=1.24.0
+requests>=2.28.0
+anthropic>=0.50.0
+filelock>=3.12.0
+openpyxl>=3.1.0
+xlsxwriter>=3.1.0
+flask>=3.0.0

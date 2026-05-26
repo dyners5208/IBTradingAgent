@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MoomooTrader — Agent Reference</title>
+<style>
+  :root {
+    --bg:        #0f1117;
+    --surface:   #1a1d27;
+    --surface2:  #222536;
+    --border:    #2e3245;
+    --accent:    #4f8ef7;
+    --accent2:   #6fcf97;
+    --warn:      #f2994a;
+    --danger:    #eb5757;
+    --text:      #e2e8f0;
+    --muted:     #8892a4;
+    --tag-blue:  #1e3a5f;
+    --tag-green: #1a3d2e;
+    --tag-orange:#3d2e1a;
+    --tag-red:   #3d1a1a;
+    --tag-purple:#2d1a3d;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+    display: flex;
+  }
+
+  /* ── Sidebar ── */
+  nav {
+    width: 240px;
+    min-height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    flex-shrink: 0;
+    padding: 24px 0;
+  }
+
+  nav .logo {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--accent);
+    padding: 0 20px 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+    letter-spacing: .3px;
+  }
+  nav .logo span { color: var(--muted); font-weight: 400; font-size: 11px; display:block; margin-top:3px; }
+
+  nav a {
+    display: block;
+    padding: 7px 20px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    transition: color .15s, background .15s;
+    border-left: 2px solid transparent;
+  }
+  nav a:hover { color: var(--text); background: var(--surface2); }
+  nav a.active { color: var(--accent); border-left-color: var(--accent); background: rgba(79,142,247,.08); }
+  nav .section-label {
+    padding: 14px 20px 4px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+  }
+
+  /* ── Main ── */
+  main {
+    flex: 1;
+    max-width: 900px;
+    padding: 40px 48px 80px;
+    min-width: 0;
+  }
+
+  h1 { font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+  h1 small { font-size: 14px; font-weight: 400; color: var(--muted); margin-left: 10px; }
+
+  .subtitle { color: var(--muted); margin-bottom: 36px; font-size: 14px; }
+
+  h2 {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 48px 0 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    scroll-margin-top: 24px;
+  }
+
+  h3 {
+    font-size: 14px;
+    font-weight: 700;
+    margin: 24px 0 10px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+
+  h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 16px 0 8px;
+    color: var(--text);
+  }
+
+  p { margin-bottom: 12px; color: var(--text); }
+
+  /* ── Cards / Tables ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+  }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 16px;
+    font-size: 13px;
+  }
+  th {
+    text-align: left;
+    padding: 8px 12px;
+    background: var(--surface2);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,.02); }
+
+  /* ── Tags / Badges ── */
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .3px;
+  }
+  .tag-blue   { background: var(--tag-blue);   color: #7eb8ff; }
+  .tag-green  { background: var(--tag-green);  color: #6fcf97; }
+  .tag-orange { background: var(--tag-orange); color: #f2994a; }
+  .tag-red    { background: var(--tag-red);    color: #eb5757; }
+  .tag-purple { background: var(--tag-purple); color: #bb6bd9; }
+
+  /* ── Score bar ── */
+  .score-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .score-label { width: 130px; font-size: 13px; color: var(--muted); }
+  .score-bar-wrap { flex: 1; background: var(--surface2); border-radius: 4px; height: 8px; }
+  .score-bar { height: 8px; border-radius: 4px; }
+  .score-bar.blue   { background: var(--accent); }
+  .score-bar.green  { background: var(--accent2); }
+  .score-bar.orange { background: var(--warn); }
+  .score-pct { width: 40px; text-align: right; font-size: 12px; color: var(--muted); }
+
+  /* ── Timeline / steps ── */
+  .steps { list-style: none; padding: 0; }
+  .steps li {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 16px;
+    align-items: flex-start;
+  }
+  .step-num {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .step-body { flex: 1; }
+  .step-body strong { display: block; font-size: 14px; margin-bottom: 3px; }
+  .step-body p { margin: 0; color: var(--muted); font-size: 13px; }
+
+  /* ── Callout ── */
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: rgba(79,142,247,.07);
+    padding: 12px 16px;
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 14px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .callout.warn  { border-color: var(--warn);   background: rgba(242,153,74,.07); }
+  .callout.green { border-color: var(--accent2); background: rgba(111,207,151,.07); }
+  .callout.red   { border-color: var(--danger);  background: rgba(235,87,87,.07); }
+
+  /* ── Formula box ── */
+  .formula {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 12.5px;
+    color: var(--accent2);
+    margin: 12px 0 16px;
+    line-height: 1.8;
+  }
+
+  code {
+    background: var(--surface2);
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    color: var(--accent2);
+  }
+
+  /* ── Strategy matrix ── */
+  .matrix {
+    display: grid;
+    grid-template-columns: auto 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    font-size: 13px;
+  }
+  .matrix-cell {
+    background: var(--surface);
+    padding: 12px 14px;
+  }
+  .matrix-cell.header {
+    background: var(--surface2);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+  .matrix-cell.axis {
+    background: var(--surface2);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    writing-mode: vertical-rl;
+    text-align: center;
+    padding: 16px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── Divider ── */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+  /* ── Number highlight ── */
+  .num { color: var(--accent); font-weight: 700; }
+  .num-green { color: var(--accent2); font-weight: 700; }
+  .num-orange { color: var(--warn); font-weight: 700; }
+  .num-red { color: var(--danger); font-weight: 700; }
+
+  /* ── Updated badge ── */
+  .updated {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 32px;
+  }
+
+  @media (max-width: 768px) {
+    nav { display: none; }
+    main { padding: 24px 20px; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Sidebar Navigation ── -->
+<nav>
+  <div class="logo">
+    MoomooTrader
+    <span>Agent Reference Guide</span>
+  </div>
+
+  <div class="section-label">Overview</div>
+  <a href="#overview">What the Agent Does</a>
+  <a href="#markets">Market Coverage</a>
+  <a href="#loop">Agent Loop</a>
+
+  <div class="section-label">Scanning</div>
+  <a href="#full-scan">Full Universe Scan</a>
+  <a href="#scoring">Scoring System</a>
+  <a href="#strategy-select">Strategy Selection</a>
+  <a href="#rescan">Intra-Day Re-Scan</a>
+
+  <div class="section-label">Allocation</div>
+  <a href="#allocation">Capital Allocation</a>
+  <a href="#position-sizing">Position Sizing</a>
+
+  <div class="section-label">Execution</div>
+  <a href="#order-exec">Order Execution</a>
+  <a href="#wheel">Wheel Strategy</a>
+
+  <div class="section-label">Monitoring</div>
+  <a href="#monitoring">Trade Monitor</a>
+  <a href="#exit-rules">Exit Rules</a>
+  <a href="#rolling">Rolling Rules</a>
+  <a href="#ext-close">External Close Detection</a>
+
+  <div class="section-label">Reference</div>
+  <a href="#constants">All Constants</a>
+</nav>
+
+<!-- ── Main Content ── -->
+<main>
+
+  <h1>MoomooTrader Agent <small>Reference Guide</small></h1>
+  <p class="subtitle">Complete rules, thresholds, and logic governing every decision the agent makes.</p>
+  <p class="updated">Last updated: 2026-04-29</p>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <h2 id="overview">What the Agent Does</h2>
+
+  <p>The agent is a fully autonomous options and equities trading system connected to a Moomoo brokerage account via the OpenAPI. It operates in a continuous loop, scanning markets for high-probability setups, placing trades, and actively managing open positions — all without manual intervention.</p>
+
+  <ul class="steps">
+    <li>
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <strong>Scan &amp; Score</strong>
+        <p>Fetches 260 days of daily OHLCV data for the entire market universe, scores every stock on money flow and momentum, and identifies the top 5 candidates per market.</p>
+      </div>
+    </li>
+    <li>
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <strong>Select Strategy</strong>
+        <p>Chooses an options strategy (or stock trade) for each candidate based on direction bias (bullish / bearish / neutral) and the implied volatility environment (high / low).</p>
+      </div>
+    </li>
+    <li>
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <strong>Size &amp; Execute</strong>
+        <p>Allocates capital using a score-weighted budget, selects the best strike/expiry, and places limit orders via the Moomoo API. Anchor leg fills first; protection leg follows.</p>
+      </div>
+    </li>
+    <li>
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <strong>Monitor Every 30 Min</strong>
+        <p>Checks every open position against take-profit, cut-loss, theta-exit, and roll triggers. Executes closing or rolling orders automatically when rules are met.</p>
+      </div>
+    </li>
+    <li>
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <strong>Intra-Day Re-Scan</strong>
+        <p>Every 30 minutes, re-scores the day's top-5 candidates and retries placing trades for any slots that remain unfilled, but only if scores are still bullish.</p>
+      </div>
+    </li>
+    <li>
+      <div class="step-num">6</div>
+      <div class="step-body">
+        <strong>Wheel Strategy</strong>
+        <p>Separately, runs Cash-Secured Puts and Covered Calls on a pre-approved watchlist (WHEEL_UNIVERSE) with its own scoring filter and budget pool.</p>
+      </div>
+    </li>
+  </ul>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <h2 id="markets">Market Coverage</h2>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>US Market</h3>
+      <table>
+        <tr><td>Trading hours</td><td>9:30 AM – 4:00 PM ET</td></tr>
+        <tr><td>Scan trigger</td><td>9:45 AM ET (15 min after open)</td></tr>
+        <tr><td>Instruments</td><td>Options spreads (primary), stock buy/short</td></tr>
+        <tr><td>Allocation</td><td class="num">35%</td> of cash</tr>
+        <tr><td>Max positions</td><td>5 per session</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3>HK Market</h3>
+      <table>
+        <tr><td>AM session</td><td>9:30 AM – 12:00 PM HKT</td></tr>
+        <tr><td>Lunch break</td><td>12:00 PM – 1:00 PM HKT</td></tr>
+        <tr><td>PM session</td><td>1:00 PM – 4:00 PM HKT</td></tr>
+        <tr><td>Scan triggers</td><td>9:45 AM &amp; 1:15 PM HKT</td></tr>
+        <tr><td>Instruments</td><td>Stock buy/short (options if available)</td></tr>
+        <tr><td>Allocation</td><td class="num">50%</td> of cash</tr>
+        <tr><td>Max positions</td><td>5 per session</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="callout">
+    The agent detects the HK lunch break separately from market close. During lunch (12:00–13:00 HKT), it shows "LUNCH (reopens 13:00)" and continues monitoring. The PM session gets its own scan trigger at 13:15 HKT if the AM scan was not completed.
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <h2 id="loop">Agent Loop</h2>
+
+  <p>In <code>run</code> mode the agent cycles indefinitely. Each loop takes the following actions in order:</p>
+
+  <table>
+    <thead><tr><th>Step</th><th>Condition</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>First scan</strong></td>
+        <td>Market open + past buffer + not yet scanned today</td>
+        <td>Full universe scan → place trades → cache top-5 candidates</td>
+      </tr>
+      <tr>
+        <td><strong>Re-scan</strong></td>
+        <td>First scan done + market still open + unfilled slots remain</td>
+        <td>Re-score top-5 only → place trades for still-qualifying unfilled slots</td>
+      </tr>
+      <tr>
+        <td><strong>No scan</strong></td>
+        <td>All slots filled, or market closed, or in open buffer</td>
+        <td>Print reason; skip to monitor phase</td>
+      </tr>
+      <tr>
+        <td><strong>Monitor</strong></td>
+        <td>At least one market open (or HK trading day)</td>
+        <td>Check every open trade for TP / CL / theta / roll triggers</td>
+      </tr>
+      <tr>
+        <td><strong>Sleep</strong></td>
+        <td>—</td>
+        <td>Sleep up to 30 min; wake early if scan trigger approaching</td>
+      </tr>
+      <tr>
+        <td><strong>End-of-day report</strong></td>
+        <td>Both markets closed; report not yet generated today</td>
+        <td>Generate daily Excel report; sleep until next session open</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout warn">
+    <strong>Edge case:</strong> If the monitor run itself takes long enough to push past the open-buffer threshold (e.g. woke at 9:42, monitor finished at 9:47), the agent detects this and overrides sleep to <strong>10 seconds</strong> so the scan fires immediately rather than waiting another 30 minutes.
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <h2 id="full-scan">Full Universe Scan</h2>
+
+  <p>The full scan runs once per market per day. It is intentionally heavyweight — it fetches historical data for the <em>entire</em> market universe to find the objectively best-scoring stocks, not just a pre-defined watchlist.</p>
+
+  <ol class="steps">
+    <li>
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <strong>Build Universe</strong>
+        <p>Dynamically fetches the full tradable US or HK stock universe from moomoo (several hundred to thousands of tickers).</p>
+      </div>
+    </li>
+    <li>
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <strong>Fetch 260 Days of OHLCV</strong>
+        <p>Downloads daily kline data for every stock in the universe. ~260 days is required for MA200 calculation.</p>
+      </div>
+    </li>
+    <li>
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <strong>Score &amp; Rank</strong>
+        <p>Computes composite score for each stock. Takes the top 15 by score as the candidate pool.</p>
+      </div>
+    </li>
+    <li>
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <strong>Filter by Options Availability</strong>
+        <p>Checks which of the top 15 have listed options on moomoo. Keeps the top 5 with options (or top 5 overall if no options found).</p>
+      </div>
+    </li>
+    <li>
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <strong>Fetch Options Chain</strong>
+        <p>For each of the top 5, fetches the options chain and computes avg ATM IV. Selects the target expiry (21–60 DTE preferred, minimum 14 DTE).</p>
+      </div>
+    </li>
+    <li>
+      <div class="step-num">6</div>
+      <div class="step-body">
+        <strong>Build &amp; Execute Trade Plan</strong>
+        <p>Selects strategy, strikes, and contract count. Places limit orders. Caches the top-5 list for intra-day re-scans.</p>
+      </div>
+    </li>
+  </ol>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <h2 id="scoring">Scoring System</h2>
+
+  <p>Every stock receives a <strong>composite score in the range [−1, +1]</strong>. Positive = institutional accumulation + bullish momentum. Negative = distribution + bearish momentum. The score drives strategy selection and position sizing.</p>
+
+  <div class="formula">
+Composite Score = Money Flow Score × 0.60  +  Direction Score × 0.40
+  </div>
+
+  <h3>Money Flow Score (60% weight)</h3>
+
+  <div class="score-row">
+    <div class="score-label">MFI (14-day)</div>
+    <div class="score-bar-wrap"><div class="score-bar blue" style="width:30%"></div></div>
+    <div class="score-pct">30%</div>
+  </div>
+  <div class="score-row">
+    <div class="score-label">CMF (20-day)</div>
+    <div class="score-bar-wrap"><div class="score-bar blue" style="width:30%"></div></div>
+    <div class="score-pct">30%</div>
+  </div>
+  <div class="score-row">
+    <div class="score-label">OBV Slope (20d)</div>
+    <div class="score-bar-wrap"><div class="score-bar blue" style="width:20%"></div></div>
+    <div class="score-pct">20%</div>
+  </div>
+  <div class="score-row">
+    <div class="score-label">VWAP % (20-day)</div>
+    <div class="score-bar-wrap"><div class="score-bar blue" style="width:20%"></div></div>
+    <div class="score-pct">20%</div>
+  </div>
+
+  <table style="margin-top:10px">
+    <thead><tr><th>Indicator</th><th>Signal</th><th>Normalisation</th></tr></thead>
+    <tbody>
+      <tr><td>MFI 14d</td><td>Above 50 = buying pressure</td><td><code>(MFI − 50) / 50</code></td></tr>
+      <tr><td>CMF 20d</td><td>Positive = accumulation</td><td><code>CMF × 2</code> (CMF ≈ [−0.5, +0.5])</td></tr>
+      <tr><td>OBV Slope 20d</td><td>Rising OBV = institutional buying</td><td><code>slope × 10</code></td></tr>
+      <tr><td>VWAP % 20d</td><td>Price above VWAP = demand</td><td><code>vwap_pct / 5</code> (±5% = full signal)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Direction / Momentum Score (40% weight)</h3>
+
+  <div class="score-row">
+    <div class="score-label">RSI (14-day)</div>
+    <div class="score-bar-wrap"><div class="score-bar green" style="width:35%"></div></div>
+    <div class="score-pct">35%</div>
+  </div>
+  <div class="score-row">
+    <div class="score-label">MACD Histogram</div>
+    <div class="score-bar-wrap"><div class="score-bar green" style="width:35%"></div></div>
+    <div class="score-pct">35%</div>
+  </div>
+  <div class="score-row">
+    <div class="score-label">MA50 vs MA200</div>
+    <div class="score-bar-wrap"><div class="score-bar green" style="width:30%"></div></div>
+    <div class="score-pct">30%</div>
+  </div>
+
+  <table style="margin-top:10px">
+    <thead><tr><th>Indicator</th><th>Signal</th><th>Normalisation</th></tr></thead>
+    <tbody>
+      <tr><td>RSI 14d</td><td>Above 50 = bullish momentum</td><td><code>(RSI − 50) / 50</code></td></tr>
+      <tr><td>MACD Histogram</td><td>Positive = upward momentum</td><td><code>hist / price × 200</code></td></tr>
+      <tr><td>MA50 vs MA200</td><td>Golden cross = long-term trend</td><td><code>(MA50 − MA200) / MA200 × 5</code></td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout green">
+    All component scores are clamped to [−1, +1] before weighting. A composite score of <strong>+0.10 or above</strong> is the minimum threshold used for CSP eligibility and intra-day re-scan retries. Stocks below this threshold are treated as bearish/neutral and skipped.
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <h2 id="strategy-select">Strategy Selection</h2>
+
+  <p>Strategy is determined by two factors: <strong>direction bias</strong> (from direction score) and <strong>volatility regime</strong> (from options IV or 20-day historical volatility).</p>
+
+  <div class="card" style="padding:0; overflow:hidden;">
+  <div class="matrix">
+    <div class="matrix-cell header" style="grid-column:1; grid-row:1;"></div>
+    <div class="matrix-cell header" style="grid-column:2; grid-row:1; text-align:center;">High Vol<br><span style="font-weight:400;color:var(--text);">IV or HV &gt; 30%</span></div>
+    <div class="matrix-cell header" style="grid-column:3; grid-row:1; text-align:center;">Low Vol<br><span style="font-weight:400;color:var(--text);">IV or HV ≤ 30%</span></div>
+
+    <div class="matrix-cell" style="grid-column:1; grid-row:2; background:var(--tag-green); color:#6fcf97; font-size:11px; font-weight:700; writing-mode:vertical-rl; text-align:center; padding:16px 10px; display:flex; align-items:center; justify-content:center;">
+      Bullish<br><span style="font-size:10px; opacity:.7;">score &gt; +0.25</span>
+    </div>
+    <div class="matrix-cell" style="grid-column:2; grid-row:2;">
+      <span class="tag tag-green">Bull Put Spread</span>
+      <p style="margin-top:8px; font-size:13px; color:var(--muted);">Sell OTM put (~0.30δ, 5–8% below price) + Buy further OTM put (~0.15δ, 10–15% below). Credit strategy — collect elevated premium. Profits if stock stays above short strike.</p>
+    </div>
+    <div class="matrix-cell" style="grid-column:3; grid-row:2;">
+      <span class="tag tag-blue">Bull Call Spread</span>
+      <p style="margin-top:8px; font-size:13px; color:var(--muted);">Buy ATM call (~0.50δ) + Sell OTM call (~0.25δ, 5–8% above price). Debit strategy — low-cost directional play. Profits when stock moves up.</p>
+    </div>
+
+    <div class="matrix-cell" style="grid-column:1; grid-row:3; background:var(--tag-red); color:#eb5757; font-size:11px; font-weight:700; writing-mode:vertical-rl; text-align:center; padding:16px 10px; display:flex; align-items:center; justify-content:center;">
+      Bearish<br><span style="font-size:10px; opacity:.7;">score &lt; −0.25</span>
+    </div>
+    <div class="matrix-cell" style="grid-column:2; grid-row:3;">
+      <span class="tag tag-red">Bear Call Spread</span>
+      <p style="margin-top:8px; font-size:13px; color:var(--muted);">Sell OTM call (~0.30δ, 5–8% above price) + Buy further OTM call (~0.15δ, 10–15% above). Credit strategy — profits if stock stays below short call strike.</p>
+    </div>
+    <div class="matrix-cell" style="grid-column:3; grid-row:3;">
+      <span class="tag tag-red">Bear Put Spread</span>
+      <p style="margin-top:8px; font-size:13px; color:var(--muted);">Buy ATM put (~0.50δ) + Sell OTM put (~0.25δ, 5–8% below price). Debit strategy — defined-risk bearish play. Profits when stock declines.</p>
+    </div>
+
+    <div class="matrix-cell" style="grid-column:1; grid-row:4; background:var(--tag-orange); color:#f2994a; font-size:11px; font-weight:700; writing-mode:vertical-rl; text-align:center; padding:16px 10px; display:flex; align-items:center; justify-content:center;">
+      Neutral<br><span style="font-size:10px; opacity:.7;">−0.25 ≤ score ≤ +0.25</span>
+    </div>
+    <div class="matrix-cell" style="grid-column:2; grid-row:4;">
+      <span class="tag tag-orange">Iron Condor</span>
+      <p style="margin-top:8px; font-size:13px; color:var(--muted);">Sell OTM call (~0.25δ) + Buy further OTM call (~0.10δ) + Sell OTM put (~0.25δ) + Buy further OTM put (~0.10δ). Profits from time decay and IV crush in a range-bound environment.</p>
+    </div>
+    <div class="matrix-cell" style="grid-column:3; grid-row:4;">
+      <span class="tag tag-purple">Long Straddle</span>
+      <p style="margin-top:8px; font-size:13px; color:var(--muted);">Buy ATM call + Buy ATM put (~0.50δ each). Profits from a large move in either direction. Suitable when a catalyst is expected but direction is uncertain.</p>
+    </div>
+  </div>
+  </div>
+
+  <h3>Stock-Only Accounts (No Options)</h3>
+  <table>
+    <thead><tr><th>Direction</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr><td><span class="tag tag-green">Bullish</span> &gt; +0.25</td><td>Buy shares at limit price (mid bid/ask). TP +10%, CL −5%.</td></tr>
+      <tr><td><span class="tag tag-red">Bearish</span> &lt; −0.25</td><td>Short sell at limit price. Requires margin account. TP +10%, CL −5%.</td></tr>
+      <tr><td><span class="tag tag-orange">Neutral</span> −0.25 to +0.25</td><td>No trade placed.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Options Expiry Selection</h3>
+  <table>
+    <thead><tr><th>Rule</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Minimum DTE considered</td><td><span class="num">14</span> days</td></tr>
+      <tr><td>Preferred DTE range</td><td><span class="num">21 – 60</span> days</td></tr>
+      <tr><td>Fallback</td><td>Nearest available expiry if no expiry falls in the preferred window</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <h2 id="rescan">Intra-Day Re-Scan</h2>
+
+  <p>After the first scan, the agent re-evaluates the same top-5 candidates every 30 minutes throughout the trading day. This is lightweight — only 5 stocks are re-scored, not the full universe.</p>
+
+  <div class="callout green">
+    <strong>Purpose:</strong> If an order was cancelled (unfilled in the timeout window), the re-scan gives it another chance with completely fresh pricing. It does not blindly retry — it first re-checks whether the bullish signal is still valid.
+  </div>
+
+  <table>
+    <thead><tr><th>Rule</th><th>Detail</th></tr></thead>
+    <tbody>
+      <tr><td>Triggered when</td><td>First scan done today + market open + at least one candidate has no open trade</td></tr>
+      <tr><td>Stocks re-scored</td><td>Only the cached top-5 from the day's first full scan</td></tr>
+      <tr><td>Score threshold</td><td>Composite score must still be ≥ <span class="num">+0.10</span> to retry</td></tr>
+      <tr><td>Stocks with open trade</td><td>Always skipped — <code>has_open_trade()</code> guard prevents double-entry</td></tr>
+      <tr><td>Pricing</td><td>Fresh options chain fetched at time of re-scan (new mid-price, new delta selection)</td></tr>
+      <tr><td>Budget</td><td>Same score-weighted allocation as the original scan</td></tr>
+      <tr><td>When it stops</td><td>All 5 slots filled, or market closes, or all remaining candidates fall below threshold</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <h2 id="allocation">Capital Allocation</h2>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>US Spread / Stock Trades</h3>
+      <p>Total budget = <span class="num">35%</span> of available cash.<br>
+      Split across up to <span class="num">5</span> positions using score-weighted sizing.</p>
+    </div>
+    <div class="card">
+      <h3>HK Stock Trades</h3>
+      <p>Total budget = <span class="num">50%</span> of available cash.<br>
+      Split across up to <span class="num">5</span> positions using score-weighted sizing.</p>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Wheel Strategy — CSP Collateral</h3>
+    <p>Total collateral pool = <span class="num">35%</span> of available cash.<br>
+    Split across eligible WHEEL_UNIVERSE stocks using score-weighted sizing.<br>
+    Tracked cumulatively: cumulative collateral never exceeds the pool cap in a single session.</p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <h2 id="position-sizing">Position Sizing — Score-Weighted Allocation</h2>
+
+  <p>Positions are not sized equally. The highest-scoring stock in a market gets <span class="num">3×</span> the budget of the lowest-scoring one, with linear interpolation filling the ranks in between.</p>
+
+  <div class="formula">
+weight[i] = 1.0 + (STEEPNESS − 1.0) × (1.0 − i / (n − 1))
+
+At STEEPNESS = 3.0, n = 5:
+  Rank 1 (best):  weight = 3.0  →  30.0% of budget
+  Rank 2:         weight = 2.5  →  25.0% of budget
+  Rank 3:         weight = 2.0  →  20.0% of budget
+  Rank 4:         weight = 1.5  →  15.0% of budget
+  Rank 5 (worst): weight = 1.0  →  10.0% of budget
+  </div>
+
+  <div class="callout">
+    <strong>Single candidate:</strong> receives 100% of the budget pool (weight = 1.0, no normalisation needed). <strong>Two candidates:</strong> weights are [3.0, 1.0], giving a 75% / 25% split.
+  </div>
+
+  <h3>Contracts Per Trade</h3>
+  <table>
+    <thead><tr><th>Strategy type</th><th>Sizing logic</th></tr></thead>
+    <tbody>
+      <tr><td>Credit spreads (Bull Put, Bear Call, Iron Condor)</td><td>Max contracts that fit within the per-trade budget given the spread width (collateral)</td></tr>
+      <tr><td>Debit spreads (Bull Call, Bear Put, Straddle)</td><td>Max contracts that fit within the per-trade budget given the debit premium</td></tr>
+      <tr><td>CSP (Wheel)</td><td>Per-stock budget ÷ (strike × 100), capped by remaining pool and by MAX_CONTRACTS</td></tr>
+      <tr><td>Covered Call (Wheel)</td><td>min(shares held ÷ 100, MAX_CONTRACTS)</td></tr>
+      <tr><td>Hard cap</td><td><span class="num-red">10 contracts</span> maximum per trade regardless of budget</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <h2 id="order-exec">Order Execution</h2>
+
+  <h3>Order Type &amp; Pricing</h3>
+  <table>
+    <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Order type</td><td>Limit order</td></tr>
+      <tr><td>Limit price</td><td>Mid-price of bid/ask, nudged <span class="num">5%</span> toward the aggressive side (sell → toward bid; buy → toward ask)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Multi-Leg Order Sequence</h3>
+  <ol class="steps">
+    <li>
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <strong>Place Anchor Leg</strong>
+        <p>The short/sell leg (or buy leg for debit spreads) is placed first. Wait for fill before placing protection.</p>
+      </div>
+    </li>
+    <li>
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <strong>Wait for Anchor Fill</strong>
+        <p>Poll every <span class="num">30 seconds</span>. Single-leg (CSP/CC): wait up to <span class="num">20 minutes</span>. Multi-leg spread: wait up to <span class="num">10 minutes</span>.</p>
+      </div>
+    </li>
+    <li>
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <strong>Place Protection Leg</strong>
+        <p>Once anchor fills, immediately place the protection/hedge leg with fresh pricing from the current bid/ask.</p>
+      </div>
+    </li>
+    <li>
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <strong>Timeout → Cancel</strong>
+        <p>If anchor does not fill within the timeout, the order is cancelled. The trade is not logged as open. The intra-day re-scan may retry it in the next 30-min cycle.</p>
+      </div>
+    </li>
+  </ol>
+
+  <div class="callout">
+    <strong>Why different timeouts?</strong> Single-leg trades (CSP, CC) have no hedge-risk — you are fully exposed while waiting regardless, so it is worth waiting longer. Multi-leg spreads have protection legs whose pricing goes stale over time; a long wait risks legging into the anchor at a very different volatility than the protection was priced.
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <h2 id="wheel">Wheel Strategy (US Only)</h2>
+
+  <p>The Wheel Strategy runs on a separate pre-approved watchlist (<code>WHEEL_UNIVERSE</code>) after the main scan completes, whenever the US market is open. It has its own budget pool and scoring requirements.</p>
+
+  <h3>Pass 1 — Covered Calls</h3>
+  <table>
+    <thead><tr><th>Rule</th><th>Detail</th></tr></thead>
+    <tbody>
+      <tr><td>Eligibility</td><td>Any WHEEL_UNIVERSE stock where ≥ <span class="num">100</span> shares are currently held</td></tr>
+      <tr><td>Score requirement</td><td><strong>None</strong> — income generation on existing holdings, not a new directional bet</td></tr>
+      <tr><td>Open trade check</td><td>Skipped if <code>has_open_trade()</code> returns true</td></tr>
+      <tr><td>Contracts</td><td>min(shares ÷ 100, 10)</td></tr>
+      <tr><td>Strike selection</td><td>Sell OTM call at approximately −0.30 delta</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Pass 2 — Cash-Secured Puts</h3>
+  <table>
+    <thead><tr><th>Rule</th><th>Detail</th></tr></thead>
+    <tbody>
+      <tr><td>Score requirement</td><td>Composite score ≥ <span class="num">+0.10</span> (net bullish signal required)</td></tr>
+      <tr><td>Processing order</td><td>Descending composite score (highest-score stock gets budget first)</td></tr>
+      <tr><td>Open trade check</td><td>Skip if already has an open trade for this stock</td></tr>
+      <tr><td>CC conflict</td><td>Skip CSP if ≥ 100 shares held (covered call placed instead in Pass 1)</td></tr>
+      <tr><td>Strike selection</td><td>OTM put at approximately −0.30 delta</td></tr>
+      <tr><td>Collateral</td><td>strike × 100 × contracts</td></tr>
+      <tr><td>Budget per stock</td><td>Score-weighted share of the CSP pool (same 3× steepness formula)</td></tr>
+      <tr><td>Total CSP pool</td><td><span class="num">35%</span> of available cash across all CSPs in one session</td></tr>
+      <tr><td>Hard cash ceiling</td><td>Cumulative collateral committed can never exceed available cash</td></tr>
+      <tr><td>Margin check</td><td>Each CSP also passes through <code>margin_safe_to_trade()</code> using uncommitted cash</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout warn">
+    <strong>Why require bullish score for CSPs?</strong> Selling a put on a bearish stock increases assignment risk: you end up owning shares of a stock in a downtrend. The score filter ensures you only sell puts on stocks with genuine bullish momentum, where assignment (if it happens) is buying something you'd actually want to hold.
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <h2 id="monitoring">Trade Monitor</h2>
+
+  <p>The monitor runs every 30 minutes on all open trades. It queries live prices and order fill status from moomoo and evaluates each position against all exit and roll rules.</p>
+
+  <h3>Fill Status Check (Every Cycle)</h3>
+  <table>
+    <thead><tr><th>Fill state</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr><td>All orders cancelled / failed</td><td>Auto-remove trade from open log. Stock is eligible for re-entry next scan.</td></tr>
+      <tr><td>No fill yet (pending)</td><td>Log "PENDING FILL" — no action taken. Continue waiting.</td></tr>
+      <tr><td>Partially filled (some legs only)</td><td>Evaluate only filled legs for TP/CL. Partial tag [P] shown in output.</td></tr>
+      <tr><td>Fully filled</td><td>Proceed to full P&amp;L evaluation and exit decision.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>P&amp;L Source</h3>
+  <p>The monitor prefers moomoo's authoritative unrealised P&amp;L from <code>position_list_query</code> (same source as the moomoo app). This eliminates discrepancies from stale bid/ask when markets are closed. If all active legs are present in the position list, that P&amp;L overrides the price-derived calculation.</p>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <h2 id="exit-rules">Exit Rules</h2>
+
+  <h3>Credit Strategies — Bull Put Spread, Bear Call Spread, Iron Condor, CSP, Covered Call</h3>
+  <table>
+    <thead><tr><th>Trigger</th><th>Condition</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="tag tag-green">Take Profit</span></td>
+        <td>Cost-to-close ≤ <span class="num-green">20%</span> of original credit received<br><small style="color:var(--muted)">(i.e. 80%+ of max profit has decayed away)</small></td>
+        <td>Buy-to-close all legs at market mid</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-red">Cut Loss</span></td>
+        <td>Cost-to-close ≥ <span class="num-red">200%</span> of original credit received<br><small style="color:var(--muted)">(loss equals the original premium collected)</small></td>
+        <td>Buy-to-close all legs at market mid</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-orange">Roll Trigger</span></td>
+        <td>DTE ≤ <span class="num-orange">14</span> days (and neither TP nor CL hit)</td>
+        <td>Evaluate roll to next expiry (see Rolling Rules)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Debit Strategies — Bull Call Spread, Bear Put Spread</h3>
+  <table>
+    <thead><tr><th>Trigger</th><th>Condition</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="tag tag-green">Take Profit</span></td>
+        <td>P&amp;L ≥ <span class="num-green">+50%</span> of original debit paid</td>
+        <td>Sell-to-close all legs at market mid</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-red">Cut Loss</span></td>
+        <td>Position value ≤ <span class="num-red">30%</span> of debit paid<br><small style="color:var(--muted)">(−70% loss on the debit)</small></td>
+        <td>Sell-to-close all legs at market mid</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-orange">Theta Exit</span></td>
+        <td>DTE ≤ <span class="num-orange">21</span> days <em>and</em> position is at a loss</td>
+        <td>Exit to stop further theta erosion</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Long Straddle</h3>
+  <table>
+    <thead><tr><th>Trigger</th><th>Condition</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="tag tag-green">Take Profit</span></td>
+        <td>P&amp;L ≥ <span class="num-green">+50%</span> of total debit paid</td>
+        <td>Close both legs</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-red">Cut Loss</span></td>
+        <td>Position value ≤ <span class="num-red">50%</span> of total debit paid</td>
+        <td>Close both legs</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-orange">Theta Exit</span></td>
+        <td>DTE ≤ <span class="num-orange">21</span> days (regardless of P&amp;L)</td>
+        <td>Exit — theta drag is too severe near expiry</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Stock Trades</h3>
+  <table>
+    <thead><tr><th>Trigger</th><th>Condition</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="tag tag-green">Take Profit</span></td>
+        <td>P&amp;L ≥ <span class="num-green">+10%</span> of cost basis</td>
+        <td>Close at limit (mid bid/ask)</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-red">Cut Loss</span></td>
+        <td>P&amp;L ≤ <span class="num-red">−5%</span> of cost basis</td>
+        <td>Close at limit (mid bid/ask)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <h2 id="rolling">Rolling Rules</h2>
+
+  <p>When a credit position approaches expiry (DTE ≤ 14) without hitting TP or CL, the agent evaluates whether to roll it forward to the next expiry.</p>
+
+  <table>
+    <thead><tr><th>Rule</th><th>Detail</th></tr></thead>
+    <tbody>
+      <tr><td>Roll trigger</td><td>DTE ≤ <span class="num">14</span> days</td></tr>
+      <tr><td>Must roll before</td><td>DTE = <span class="num">7</span> days</td></tr>
+      <tr><td>Net credit requirement</td><td>Roll must be executed for <strong>net credit</strong>, or at worst a debit ≤ <span class="num">10%</span> of original credit received</td></tr>
+      <tr><td>New expiry</td><td>Next available expiry date after the current one</td></tr>
+      <tr><td>New strikes</td><td>Same strategy re-applied at the new expiry using current price levels</td></tr>
+      <tr><td>Execution</td><td>Close current position (buy-to-close short legs, sell-to-close long legs), then open new position</td></tr>
+      <tr><td>If roll not viable</td><td>Hold until next monitor cycle; close before DTE = 7</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <h2 id="ext-close">External Close Detection</h2>
+
+  <p>The agent detects positions you have closed manually in the moomoo app, or that have expired/been assigned by the broker, and updates the trade log automatically.</p>
+
+  <table>
+    <thead><tr><th>Detection method</th><th>Detail</th></tr></thead>
+    <tbody>
+      <tr><td>Source of truth</td><td>moomoo <code>position_list_query</code> — the same data your moomoo app shows</td></tr>
+      <tr><td>API error handling</td><td>If the position query returns an API error (<code>None</code>), detection is skipped — the agent does not mistake a connection failure for a closed position</td></tr>
+      <tr><td>Grace period</td><td>Trades placed within the last <span class="num">5 minutes</span> are exempt — new positions can take a few seconds to appear in the position list</td></tr>
+      <tr><td>Options position check</td><td>All leg codes must be absent from the live position list</td></tr>
+      <tr><td>Stock position check</td><td>Stock code must be absent from the live position list</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Close Reasons &amp; P&amp;L Recording</h3>
+  <table>
+    <thead><tr><th>Scenario</th><th>Reason logged</th><th>P&amp;L recorded</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Credit strategy, DTE = 0, position gone</td>
+        <td><code>expired</code></td>
+        <td>Full credit received (expired worthless assumption)</td>
+      </tr>
+      <tr>
+        <td>Any other strategy, position gone</td>
+        <td><code>manually_closed</code></td>
+        <td>0 (closing price unknown without additional API query)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <h2 id="constants">All Constants — Quick Reference</h2>
+
+  <h3>Capital Allocation</h3>
+  <table>
+    <thead><tr><th>Constant</th><th>Value</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>US_ALLOCATION_PCT</code></td><td class="num">0.35</td><td>35% of cash for US spread / stock trades</td></tr>
+      <tr><td><code>HK_ALLOCATION_PCT</code></td><td class="num">0.50</td><td>50% of cash for HK stock trades</td></tr>
+      <tr><td><code>WHEEL_CSP_TOTAL_BUDGET_PCT</code></td><td class="num">0.35</td><td>35% of cash maximum collateral for all wheel CSPs in one session</td></tr>
+      <tr><td><code>TOP_N_STOCKS</code></td><td class="num">5</td><td>Maximum positions per market per session</td></tr>
+      <tr><td><code>SCORE_WEIGHT_STEEPNESS</code></td><td class="num">3.0</td><td>Top-ranked trade gets 3× budget of bottom-ranked</td></tr>
+      <tr><td><code>MAX_CONTRACTS</code></td><td class="num">10</td><td>Hard cap on contracts per trade</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Score Thresholds</h3>
+  <table>
+    <thead><tr><th>Constant</th><th>Value</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>CSP_MIN_COMPOSITE_SCORE</code></td><td class="num">+0.10</td><td>Minimum score for a WHEEL_UNIVERSE stock to qualify for a CSP</td></tr>
+      <tr><td><code>RESCAN_MIN_SCORE</code></td><td class="num">+0.10</td><td>Minimum score for a previously-identified candidate to be retried on intra-day re-scan</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Exit — Take Profit</h3>
+  <table>
+    <thead><tr><th>Constant</th><th>Value</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>TP_CREDIT_REMAINING</code></td><td class="num-green">0.20</td><td>Close credit spread when cost-to-close ≤ 20% of original credit (80% captured)</td></tr>
+      <tr><td><code>TP_DEBIT_MULT</code></td><td class="num-green">1.50</td><td>Close debit spread when value = 1.5× original debit (+50% gain)</td></tr>
+      <tr><td><code>TP_STRADDLE_MULT</code></td><td class="num-green">1.50</td><td>Close straddle when value = 1.5× debit paid (+50% gain)</td></tr>
+      <tr><td><code>STOCK_TP_PCT</code></td><td class="num-green">0.10</td><td>Close stock at +10% gain</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Exit — Cut Loss</h3>
+  <table>
+    <thead><tr><th>Constant</th><th>Value</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>CL_CREDIT_MULT</code></td><td class="num-red">2.00</td><td>Stop out credit spread when cost-to-close = 2× original credit (loss = 100% of credit)</td></tr>
+      <tr><td><code>CL_DEBIT_REMAINING</code></td><td class="num-red">0.30</td><td>Stop out debit spread when value falls to 30% of debit (−70% loss)</td></tr>
+      <tr><td><code>CL_STRADDLE_REMAINING</code></td><td class="num-red">0.50</td><td>Stop out straddle when value falls to 50% of debit (−50% loss)</td></tr>
+      <tr><td><code>STOCK_CL_PCT</code></td><td class="num-red">0.05</td><td>Stop out stock at −5% loss</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Theta Management</h3>
+  <table>
+    <thead><tr><th>Constant</th><th>Value</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>THETA_EXIT_DTE_DEBIT</code></td><td class="num-orange">21</td><td>Exit debit positions (and straddles) when DTE ≤ 21 days</td></tr>
+      <tr><td><code>THETA_ROLL_DTE_CREDIT</code></td><td class="num-orange">14</td><td>Evaluate rolling credit positions when DTE ≤ 14 days</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Rolling Rules</h3>
+  <table>
+    <thead><tr><th>Constant</th><th>Value</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>ROLL_DTE_TRIGGER</code></td><td class="num">14</td><td>Start evaluating roll when DTE &lt; 14</td></tr>
+      <tr><td><code>ROLL_MIN_DTE</code></td><td class="num">7</td><td>Must roll before DTE hits 7</td></tr>
+      <tr><td><code>ROLL_MAX_DEBIT_PCT</code></td><td class="num">0.10</td><td>Accept roll debit up to 10% of original credit; beyond that, do not roll</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Order Execution</h3>
+  <table>
+    <thead><tr><th>Constant</th><th>Value</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>ORDER_MID_NUDGE</code></td><td class="num">0.05</td><td>Nudge limit price 5% toward aggressive side (bid for sells, ask for buys)</td></tr>
+      <tr><td><code>ORDER_RETRY_SECONDS</code></td><td class="num">30</td><td>Poll fill status every 30 seconds</td></tr>
+      <tr><td><code>ORDER_TIMEOUT_MINS_SINGLE</code></td><td class="num">20</td><td>Wait up to 20 minutes for CSP / Covered Call (single-leg) anchor fill</td></tr>
+      <tr><td><code>ORDER_TIMEOUT_MINS_SPREAD</code></td><td class="num">10</td><td>Wait up to 10 minutes for multi-leg spread anchor fill</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Timing</h3>
+  <table>
+    <thead><tr><th>Constant</th><th>Value</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>OPEN_BUFFER_MINS</code></td><td class="num">15</td><td>Wait 15 minutes after market open before scanning (avoids opening-bell noise)</td></tr>
+      <tr><td><code>AGENT_LOOP_INTERVAL_MINS</code></td><td class="num">30</td><td>Main loop interval — monitor and re-scan every 30 minutes</td></tr>
+      <tr><td><code>MONITOR_INTERVAL_MINUTES</code></td><td class="num">15</td><td>Monitor-only mode interval (standalone <code>monitor</code> command)</td></tr>
+    </tbody>
+  </table>
+
+</main>
+
+<script>
+  // Highlight active nav link on scroll
+  const sections = document.querySelectorAll('h2[id]');
+  const navLinks  = document.querySelectorAll('nav a');
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(a => a.classList.remove('active'));
+        const active = document.querySelector(`nav a[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
