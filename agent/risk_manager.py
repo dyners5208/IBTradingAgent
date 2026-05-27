@@ -37,10 +37,28 @@ def get_account_info(market=None) -> dict | None:
     ccy = "HKD" if market == "HK" else "USD"
 
     def _tag(tag: str) -> float:
+        """Lookup an account value tag.
+
+        IBKR paper accounts (and some live configurations) report monetary
+        values under currency="" (base-currency aggregate) rather than the
+        explicit currency code (e.g. "USD").  We try the explicit code first
+        for precision, then fall back to the empty-string base-currency row
+        so we never silently return 0 and cripple budget calculations.
+        """
+        # Pass 1 — exact currency match
         for v in vals:
             if v.tag == tag and v.currency == ccy:
                 try:
                     return float(v.value)
+                except (ValueError, TypeError):
+                    pass
+        # Pass 2 — base-currency fallback (currency == "")
+        for v in vals:
+            if v.tag == tag and v.currency == "":
+                try:
+                    val = float(v.value)
+                    if val != 0:
+                        return val
                 except (ValueError, TypeError):
                     pass
         return 0.0
@@ -68,6 +86,12 @@ def get_account_info(market=None) -> dict | None:
 
     # OptionBuyingPower is more accurate for options margin; fall back to BuyingPower
     buying_power = opt_bp if (opt_bp > 0 and market != "HK") else bp
+
+    # Debug: warn if both cash and buying_power are 0 — likely a tag/currency mismatch
+    if cash == 0 and buying_power == 0 and nlv == 0:
+        all_tags = {v.tag: v.currency for v in vals}
+        print(f"  [risk] WARNING: all monetary tags returned 0 for ccy={ccy!r}. "
+              f"Available tags sample: {list(all_tags.items())[:10]}")
 
     acc_id = next((v.account for v in vals if v.account), "IBKR")
 
@@ -127,14 +151,32 @@ def compute_allocation(
     allocation_pct: float | None = None,
     top_n: int | None = None,
 ) -> list[dict]:
-    """Compute score-weighted per-trade budget, capped at allocation_pct x cash."""
+    """Compute score-weighted per-trade budget, capped at allocation_pct x capital.
+
+    Capital base: OptionBuyingPower is preferred — it is what IBKR allows for new
+    options positions and already accounts for existing position margins/collateral.
+    CashBalance is used as fallback, and NetLiquidation as last resort.
+    """
     if not results:
         return results
 
-    pct   = allocation_pct if allocation_pct is not None else US_ALLOCATION_PCT
-    n     = top_n or TOP_N_STOCKS
-    cash  = account.get("cash", 0)
-    total = cash * pct
+    pct  = allocation_pct if allocation_pct is not None else US_ALLOCATION_PCT
+    n    = top_n or TOP_N_STOCKS
+    cash = account.get("cash", 0)
+    bp   = account.get("buying_power", 0)   # OptionBuyingPower from get_account_info
+    nlv  = account.get("total_assets", 0)   # NetLiquidation — last resort
+
+    # OptionBuyingPower is the authoritative "available for new options positions"
+    # figure from IBKR. CashBalance can be artificially low when collateral is held
+    # for existing CSP/spread positions. NLV is a further fallback.
+    capital = bp or cash or nlv
+    if capital <= 0:
+        print(f"  [risk] WARNING: capital=0 for allocation "
+              f"(bp={bp:.2f} cash={cash:.2f} nlv={nlv:.2f}). "
+              f"Skipping all trades — check IBKR connection/account tags.")
+        return results  # no alloc set → callers will skip on missing alloc
+
+    total = capital * pct
     ccy   = account.get("currency", "USD")
 
     top = results[:n]
@@ -175,12 +217,16 @@ def print_account_summary(account: dict, label: str = "US") -> None:
     mm   = account.get("maintenance_margin", 0)
     ta   = account.get("total_assets", 0)
 
+    # Match the capital base logic in compute_allocation
+    capital    = bp or cash or ta
     budget_pct = US_ALLOCATION_PCT
-    budget     = cash * budget_pct
+    budget     = capital * budget_pct
     n          = TOP_N_STOCKS
     steepness  = SCORE_WEIGHT_STEEPNESS
     per_lo     = budget / (1 + (steepness - 1) * (n - 1) / n) / n if n > 1 else budget
     per_hi     = budget * steepness / (1 + steepness) if n > 1 else budget
+
+    cap_label  = "Buying power" if capital == bp else ("Cash" if capital == cash else "NLV")
 
     print(f"\n  Account [{label}] acc_id={account.get('acc_id', '?')}  "
           f"options={'YES' if account.get('supports_options') else 'NO'}")
@@ -189,6 +235,7 @@ def print_account_summary(account: dict, label: str = "US") -> None:
     print(f"    Buying power    : {ccy}  {bp:>14,.2f}")
     print(f"    Maint. margin   : {ccy}  {mm:>14,.2f}")
     print(f"    Portfolio value : {ccy}  {ta:>14,.2f}")
-    print(f"    Trade budget    : {ccy}  {budget:>14,.2f}  ({budget_pct*100:.0f}% of cash)")
+    print(f"    Trade budget    : {ccy}  {budget:>14,.2f}  "
+          f"({budget_pct*100:.0f}% of {cap_label.lower()}, capital base={capital:,.2f})")
     print(f"    Per-trade budget: {ccy}  {per_lo:,.2f} – {per_hi:,.2f}  "
           f"(score-weighted, {steepness:.0f}x steepness)")

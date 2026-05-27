@@ -245,7 +245,18 @@ def _build_trade_plan(scan_results: list[dict],
 
             num_contracts = compute_contracts(legs, alloc["per_trade"], strategy)
             if num_contracts < 1:
-                print(f"  SKIP {stock_code}: budget too small for 1 contract.")
+                # Diagnose: compute approximate cost per spread for the log
+                _mid  = lambda b, a: (b + a) / 2
+                _buy  = [l for l in legs if l["side"] == "BUY"]
+                _sell = [l for l in legs if l["side"] == "SELL"]
+                _nc   = sum(_mid(l["bid"], l["ask"]) for l in _buy) - \
+                        sum(_mid(l["bid"], l["ask"]) for l in _sell)
+                _sw   = (abs(_sell[0]["strike"] - _buy[0]["strike"])
+                         if _sell and _buy else 0)
+                _cost = round(max((_sw - abs(_nc)) * 100, 0.01) if _nc < 0 else abs(_nc) * 100, 2)
+                print(f"  SKIP {stock_code}: budget too small for 1 contract "
+                      f"(per_trade={alloc['per_trade']:,.2f}  "
+                      f"min_cost≈{_cost:,.2f}  spread_width={_sw:.2f}  net={_nc:.3f}).")
                 continue
 
             plan.append({
