@@ -87,11 +87,47 @@ def get_account_info(market=None) -> dict | None:
     # OptionBuyingPower is more accurate for options margin; fall back to BuyingPower
     buying_power = opt_bp if (opt_bp > 0 and market != "HK") else bp
 
-    # Debug: warn if both cash and buying_power are 0 — likely a tag/currency mismatch
+    # ── Multi-currency support ─────────────────────────────────────────────────
+    # For accounts whose base currency is not USD (e.g. SGD), the USD-tagged
+    # account values only reflect the USD cash slice — which can be tiny.
+    # IBKR allows funding USD options trades from base-currency buying power
+    # (it handles the FX conversion automatically at order time).
+    #
+    # We read:
+    #  • ExchangeRate(currency="USD") = base→USD rate  (e.g. 1 SGD = 0.745 USD)
+    #  • AvailableFunds(currency="")  = total available in base currency
+    # and convert to USD to use as the effective options buying power.
+    if market != "HK":
+        # Base → USD exchange rate reported by IBKR
+        # For a USD base account this will be 1.0 (or absent, defaulting to 1.0)
+        _usd_fx = next(
+            (float(v.value) for v in vals
+             if v.tag == "ExchangeRate" and v.currency == "USD"),
+            1.0,
+        )
+        # Total available funds in base currency (e.g. 112,769 SGD)
+        _avail_total = next(
+            (float(v.value) for v in vals
+             if v.tag == "AvailableFunds" and v.currency == ""),
+            0.0,
+        )
+        if _avail_total > 0 and _usd_fx > 0:
+            _bp_usd = round(_avail_total * _usd_fx, 2)
+            if _bp_usd > buying_power:
+                _base_ccy = next(
+                    (v.value for v in vals if v.tag == "BaseCurrency"),
+                    "non-USD",
+                )
+                print(f"  [risk] Multi-ccy account (base={_base_ccy}): "
+                      f"AvailFunds {_avail_total:,.2f} × {_usd_fx:.4f} "
+                      f"= {_bp_usd:,.2f} USD  (USD-only bp was {buying_power:.2f})")
+                buying_power = _bp_usd
+
+    # Debug: warn if all monetary tags are still 0
     if cash == 0 and buying_power == 0 and nlv == 0:
-        all_tags = {v.tag: v.currency for v in vals}
+        all_tags = [(v.tag, v.currency) for v in vals]
         print(f"  [risk] WARNING: all monetary tags returned 0 for ccy={ccy!r}. "
-              f"Available tags sample: {list(all_tags.items())[:10]}")
+              f"Tag sample: {all_tags[:10]}")
 
     acc_id = next((v.account for v in vals if v.account), "IBKR")
 
@@ -230,12 +266,12 @@ def print_account_summary(account: dict, label: str = "US") -> None:
 
     print(f"\n  Account [{label}] acc_id={account.get('acc_id', '?')}  "
           f"options={'YES' if account.get('supports_options') else 'NO'}")
-    print(f"    Cash            : {ccy}  {cash:>14,.2f}")
-    print(f"    Market value    : {ccy}  {mv:>14,.2f}")
-    print(f"    Buying power    : {ccy}  {bp:>14,.2f}")
-    print(f"    Maint. margin   : {ccy}  {mm:>14,.2f}")
-    print(f"    Portfolio value : {ccy}  {ta:>14,.2f}")
-    print(f"    Trade budget    : {ccy}  {budget:>14,.2f}  "
-          f"({budget_pct*100:.0f}% of {cap_label.lower()}, capital base={capital:,.2f})")
-    print(f"    Per-trade budget: {ccy}  {per_lo:,.2f} – {per_hi:,.2f}  "
-          f"(score-weighted, {steepness:.0f}x steepness)")
+    print(f"    Cash (USD)      : USD  {cash:>14,.2f}")
+    print(f"    Market value    : USD  {mv:>14,.2f}")
+    print(f"    Buying power    : USD  {bp:>14,.2f}  ← used for allocation")
+    print(f"    Maint. margin   : USD  {mm:>14,.2f}")
+    print(f"    Portfolio NLV   : USD  {ta:>14,.2f}")
+    print(f"    Trade budget    : USD  {budget:>14,.2f}  "
+          f"({budget_pct*100:.0f}% of {cap_label.lower()}, capital={capital:,.2f})")
+    print(f"    Per-trade range : USD  {per_lo:,.2f} – {per_hi:,.2f}  "
+          f"(score-weighted, {steepness:.0f}x steepness, top {n} stocks)")
