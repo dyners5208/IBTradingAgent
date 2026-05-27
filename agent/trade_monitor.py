@@ -736,7 +736,13 @@ def close_spread(trade: dict, reason: str) -> bool:
                     (lg for lg in reversed(trade_obj.log) if lg.errorCode == 201),
                     None,
                 )
-                if _e201 and "8229=COMBOPAYOUT" in (_e201.message or ""):
+                # fixstr is in trade_obj.advancedError, NOT in TradeLogEntry.message
+                _adv = getattr(trade_obj, "advancedError", "") or ""
+                _is_201_retry = _e201 is not None and (
+                    "8229=COMBOPAYOUT" in _adv
+                    or "8229=COMBOPAYOUT" in (_e201.message or "")
+                )
+                if _is_201_retry:
                     print(f"    Close Error 201 — retrying with advancedErrorOverride ({reason})...")
                     retry_close = LimitOrder(
                         action=outer_action, totalQuantity=num_c,

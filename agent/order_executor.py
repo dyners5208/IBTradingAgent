@@ -595,7 +595,15 @@ def place_spread(stock_code: str, legs: list[dict], num_contracts: int,
                 (lg for lg in reversed(trade_obj.log) if lg.errorCode == 201),
                 None,
             )
-            if _err201 and "8229=COMBOPAYOUT" in (_err201.message or ""):
+            # The fixstr "8229=COMBOPAYOUT" lives in trade_obj.advancedError
+            # (a JSON field on the Trade object), NOT in the TradeLogEntry.message.
+            # Check both locations so we never miss it.
+            _adv_err = getattr(trade_obj, "advancedError", "") or ""
+            _is_201_retry = _err201 is not None and (
+                "8229=COMBOPAYOUT" in _adv_err
+                or "8229=COMBOPAYOUT" in (_err201.message or "")
+            )
+            if _is_201_retry:
                 print(f"    [{stock_code}] Error 201 — retrying with advancedErrorOverride...")
                 retry_order = LimitOrder(
                     action=outer_action,
@@ -618,9 +626,10 @@ def place_spread(stock_code: str, legs: list[dict], num_contracts: int,
                     print(f"    [{stock_code}] Retry also rejected — order cannot be placed.")
                     return None
             else:
-                reason = (trade_obj.log[-1].message[:100]
+                reason = (trade_obj.log[-1].message[:120]
                           if trade_obj.log else "unknown cancel reason")
-                print(f"    [{stock_code}] Order cancelled (non-201): {reason}")
+                print(f"    [{stock_code}] Order cancelled (code="
+                      f"{_err201.errorCode if _err201 else '?'}): {reason}")
                 return None
     # ── End retry block ───────────────────────────────────────────────────
 
