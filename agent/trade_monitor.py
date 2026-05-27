@@ -743,11 +743,16 @@ def close_spread(trade: dict, reason: str) -> bool:
                     or "8229=COMBOPAYOUT" in (_e201.message or "")
                 )
                 if _is_201_retry:
-                    print(f"    Close Error 201 — retrying with advancedErrorOverride ({reason})...")
+                    # Reuse SAME orderId — advancedErrorOverride only works
+                    # when the identical orderId that was rejected is retransmitted.
+                    _orig_close_id = trade_obj.order.orderId
+                    print(f"    Close Error 201 — retrying orderId={_orig_close_id} "
+                          f"with same orderId + advancedErrorOverride ({reason})...")
                     retry_close = LimitOrder(
                         action=outer_action, totalQuantity=num_c,
                         lmtPrice=limit_price, tif="DAY",
                     )
+                    retry_close.orderId = _orig_close_id  # ← same orderId!
                     try:
                         retry_close.advancedErrorOverride = "8229=COMBOPAYOUT"
                     except AttributeError:

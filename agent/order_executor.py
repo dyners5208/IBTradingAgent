@@ -604,13 +604,21 @@ def place_spread(stock_code: str, legs: list[dict], num_contracts: int,
                 or "8229=COMBOPAYOUT" in (_err201.message or "")
             )
             if _is_201_retry:
-                print(f"    [{stock_code}] Error 201 — retrying with advancedErrorOverride...")
+                # CRITICAL: advancedErrorOverride ONLY works when the SAME
+                # orderId that received the rejection is resubmitted.
+                # A new orderId is treated as a fresh order → new rejection.
+                # Source: IBKR API docs: "The same orderId can be re-submitted
+                # with an advancedErrorOverride to bypass the given error."
+                _orig_id = trade_obj.order.orderId
+                print(f"    [{stock_code}] Error 201 — retrying orderId={_orig_id} "
+                      f"with advancedErrorOverride (same orderId)...")
                 retry_order = LimitOrder(
                     action=outer_action,
                     totalQuantity=num_contracts,
                     lmtPrice=limit_price,
                     tif="DAY",
                 )
+                retry_order.orderId = _orig_id   # ← reuse the REJECTED orderId
                 try:
                     retry_order.advancedErrorOverride = "8229=COMBOPAYOUT"
                 except AttributeError:
@@ -623,7 +631,16 @@ def place_spread(stock_code: str, legs: list[dict], num_contracts: int,
                 with ibkr_lock:
                     get_ib().sleep(0)
                 if trade_obj.orderStatus.status.lower() in ("cancelled", "canceled", "inactive"):
-                    print(f"    [{stock_code}] Retry also rejected — order cannot be placed.")
+                    _r_err = next(
+                        (lg for lg in reversed(trade_obj.log) if lg.errorCode != 0),
+                        None,
+                    )
+                    print(f"    [{stock_code}] Retry also rejected "
+                          f"(code={_r_err.errorCode if _r_err else '?'}).")
+                    if _r_err and _r_err.errorCode == 201:
+                        print(f"    [ACTION REQUIRED] In TWS: Configure → Order Precautions")
+                        print(f"    Increase 'Maximum active riskless combination orders'")
+                        print(f"    from 0 to 100 (or uncheck the limit entirely).")
                     return None
             else:
                 reason = (trade_obj.log[-1].message[:120]
