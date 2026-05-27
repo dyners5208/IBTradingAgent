@@ -720,6 +720,40 @@ def close_spread(trade: dict, reason: str) -> bool:
         oid = trade_obj.order.orderId
         print(f"    Close BAG {ticker} {num_c}× @ {limit_price:.2f}  "
               f"order_id={oid}  ({reason})")
+
+        # ── Error 201 retry (paper trading only) ──────────────────────────
+        # Same pattern as place_spread: detect Error 201, re-submit with
+        # advancedErrorOverride before handing off to wait_for_fill.
+        from agent.ibkr_client import is_paper as _is_paper
+        if _is_paper():
+            import time as _t
+            _t.sleep(10)
+            with ibkr_lock:
+                get_ib().sleep(0)
+            _st = trade_obj.orderStatus.status.lower()
+            if _st in ("cancelled", "canceled", "inactive"):
+                _e201 = next(
+                    (lg for lg in reversed(trade_obj.log) if lg.errorCode == 201),
+                    None,
+                )
+                if _e201 and "8229=COMBOPAYOUT" in (_e201.message or ""):
+                    print(f"    Close Error 201 — retrying with advancedErrorOverride ({reason})...")
+                    retry_close = LimitOrder(
+                        action=outer_action, totalQuantity=num_c,
+                        lmtPrice=limit_price, tif="DAY",
+                    )
+                    try:
+                        retry_close.advancedErrorOverride = "8229=COMBOPAYOUT"
+                    except AttributeError:
+                        pass
+                    with ibkr_lock:
+                        trade_obj = get_ib().placeOrder(bag, retry_close)
+                    print(f"    Close retry submitted — orderId={trade_obj.order.orderId}")
+                    _t.sleep(4)
+                    with ibkr_lock:
+                        get_ib().sleep(0)
+        # ── End retry block ───────────────────────────────────────────────
+
         filled, _ = wait_for_fill(trade_obj, ORDER_TIMEOUT_MINS_SPREAD,
                                   ORDER_RETRY_SECONDS)
         return filled
@@ -1058,6 +1092,24 @@ def run_monitor(account_us: dict) -> list[dict]:
 
     for trade in open_trades:
         stock_code   = trade["stock_code"]
+
+        # ── Safety net: pending_fill trade with no legs and no order_id was ──────
+        # never successfully placed (placeOrder returned None, but add_trade was
+        # called with a partial record from a prior code path). Auto-cancel it so
+        # it doesn't linger as a phantom "assumed filled" trade forever.
+        if (trade.get("placement_status") == "pending_fill"
+                and trade.get("trade_type") == "options"
+                and not trade.get("legs")
+                and not trade.get("order_id")):
+            close_trade(stock_code, "cancelled", 0.0)
+            print(f"  {stock_code:<14} {trade.get('strategy','?'):<22} "
+                  f"{'':>5} {'':>10} {'AUTO-CLOSED':<14} never placed (no legs/order_id)")
+            results.append({"stock_code": stock_code,
+                             "strategy": trade.get("strategy", "?"),
+                             "action": "cancelled", "pnl": 0, "dte": 0,
+                             "is_partial": False, "reason": "never placed"})
+            continue
+
         fill_details = _get_fill_details(trade, pos_pnl_map=pos_pnl_map)
 
         if not fill_details["any_filled"]:

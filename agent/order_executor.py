@@ -561,16 +561,6 @@ def place_spread(stock_code: str, legs: list[dict], num_contracts: int,
             lmtPrice=limit_price,
             tif="DAY",
         )
-        # Override IBKR's "riskless combination" restriction (Error 201).
-        # advancedErrorOverride pre-approves the FIX-string that the TWS "Transmit
-        # anyway" button sends (shown in the Error 201 advancedError JSON as
-        # "fixstr":"8229=COMBOPAYOUT"). orderMiscOptions is cleared — neither
-        # '8229' (Error 10337) nor 'manual' bypass the 201 rejection.
-        ibkr_order.orderMiscOptions = []
-        try:
-            ibkr_order.advancedErrorOverride = "8229=COMBOPAYOUT"
-        except AttributeError:
-            pass  # older ibapi build — field not available
 
         with ibkr_lock:
             trade_obj = get_ib().placeOrder(bag, ibkr_order)
@@ -585,6 +575,54 @@ def place_spread(stock_code: str, legs: list[dict], num_contracts: int,
     order_id = trade_obj.order.orderId
     print(f"    [{stock_code}] {strategy} BAG order submitted — "
           f"orderId={order_id}, {num_contracts}x combo @ lim {limit_price:.2f}")
+
+    # ── Error 201 retry (paper trading only) ──────────────────────────────
+    # TWS paper trading rejects BAG combo orders with Error 201 ~7-11 s after
+    # submission. advancedErrorOverride only works as a POST-rejection retry —
+    # TWS ignores it when set preemptively on the first submission.
+    # In live trading Error 201 never fires; is_paper() gates the wait so live
+    # orders add zero overhead.
+    from agent.ibkr_client import is_paper as _is_paper
+    if _is_paper():
+        import time as _t
+        _t.sleep(10)                     # wait outside lock (safe — same pattern as wait_for_fill)
+        with ibkr_lock:
+            get_ib().sleep(0)            # flush pending ib_insync events
+
+        _status = trade_obj.orderStatus.status.lower()
+        if _status in ("cancelled", "canceled", "inactive"):
+            _err201 = next(
+                (lg for lg in reversed(trade_obj.log) if lg.errorCode == 201),
+                None,
+            )
+            if _err201 and "8229=COMBOPAYOUT" in (_err201.message or ""):
+                print(f"    [{stock_code}] Error 201 — retrying with advancedErrorOverride...")
+                retry_order = LimitOrder(
+                    action=outer_action,
+                    totalQuantity=num_contracts,
+                    lmtPrice=limit_price,
+                    tif="DAY",
+                )
+                try:
+                    retry_order.advancedErrorOverride = "8229=COMBOPAYOUT"
+                except AttributeError:
+                    pass
+                with ibkr_lock:
+                    trade_obj = get_ib().placeOrder(bag, retry_order)
+                order_id = trade_obj.order.orderId
+                print(f"    [{stock_code}] Retry submitted — orderId={order_id}")
+                _t.sleep(4)              # brief settle check
+                with ibkr_lock:
+                    get_ib().sleep(0)
+                if trade_obj.orderStatus.status.lower() in ("cancelled", "canceled", "inactive"):
+                    print(f"    [{stock_code}] Retry also rejected — order cannot be placed.")
+                    return None
+            else:
+                reason = (trade_obj.log[-1].message[:100]
+                          if trade_obj.log else "unknown cancel reason")
+                print(f"    [{stock_code}] Order cancelled (non-201): {reason}")
+                return None
+    # ── End retry block ───────────────────────────────────────────────────
 
     # Return immediately — monitor tracks fill via _get_fill_details().
     # TP/CL use estimated net_credit from chain mid prices; monitor updates
